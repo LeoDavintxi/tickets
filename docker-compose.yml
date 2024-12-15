@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:latest
+    container_name: ticket_db
+    environment:
+      POSTGRES_DB: appTickets
+      POSTGRES_USER: appUser
+      POSTGRES_PASSWORD: appTicketsPassword2024
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+networks:
+  backend:
+    driver: bridge
