@@ -40,9 +40,9 @@ services:
     image: postgres:latest
     container_name: ticket_db
     environment:
-      POSTGRES_DB: tickets_db
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: appTickets
+      POSTGRES_USER: appUser
+      POSTGRES_PASSWORD: appTicketsPassword2024
     ports:
       - "5432:5432"
     networks:
