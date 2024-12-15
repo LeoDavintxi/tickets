@@ -67,12 +67,15 @@ Este comando descargará la imagen de PostgreSQL (si no la tienes) y levantará 
 Abre el archivo `src/main/resources/application.properties` y configura la conexión a la base de datos PostgreSQL. Agrega lo siguiente:
 
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/tickets_db
-spring.datasource.username=admin
-spring.datasource.password=admin
-spring.datasource.driver-class-name=org.postgresql.Driver
+spring.application.name=tickets
+spring.datasource.url=jdbc:postgresql://localhost:5432/appTickets
+spring.datasource.username=appUser
+spring.datasource.password=appTicketsPassword2024
 spring.jpa.hibernate.ddl-auto=update
-spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.security.user.name=user
+spring.security.user.password=pass
 ```
 
 Esto configurará la conexión con la base de datos que corre en Docker.
