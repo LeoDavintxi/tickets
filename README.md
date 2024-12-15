@@ -1,163 +1,203 @@
+# Ticket Service Application
 
-# Prueba de la aplicación en local
+Este repositorio contiene una aplicación backend desarrollada en Java utilizando Spring Boot. La aplicación permite gestionar tickets con operaciones CRUD, soporte para paginación y más. Además, está preparada para ejecutarse en un entorno local utilizando Docker para la base de datos.
 
-## Descripción
+---
 
-Este proyecto es una API REST desarrollada en Java utilizando Spring Boot, que permite gestionar tickets. Puedes crear, leer, actualizar y eliminar tickets en una base de datos PostgreSQL. A continuación, se detalla cómo ejecutar este proyecto en tu entorno local.
+## **Requisitos Previos**
 
-## Requisitos previos
+1. **Java Development Kit (JDK) 17+**
+2. **Apache Maven**
+3. **Docker y Docker Compose**
+4. **PgAdmin (opcional, para gestionar la base de datos)**
 
-Antes de ejecutar este proyecto en tu máquina local, asegúrate de tener instalados los siguientes programas:
+---
 
-1. **Java 17 o superior**: Puedes verificar si tienes Java instalado ejecutando `java -version` en la terminal. Si no lo tienes, puedes descargarlo desde [aquí](https://adoptopenjdk.net/).
-2. **Docker**: Usaremos Docker para crear un contenedor de la base de datos PostgreSQL. Puedes instalar Docker desde [aquí](https://www.docker.com/products/docker-desktop).
-3. **Maven**: Para la gestión de dependencias y la construcción del proyecto. Puedes instalar Maven desde [aquí](https://maven.apache.org/install.html).
-4. **Postman** (opcional): Para realizar las pruebas a los endpoints de la API. Puedes instalar Postman desde [aquí](https://www.postman.com/downloads/).
+## **Configuración de la Base de Datos**
 
-## Pasos para ejecutar el proyecto localmente
+Esta aplicación utiliza PostgreSQL como base de datos. Los datos de conexión son:
+- **Usuario:** `appUser`
+- **Contraseña:** `appTicketPassword2024`
+- **Base de datos:** `appTickets`
 
-### 1. Clonar el repositorio
+### **Iniciar la Base de Datos con Docker**
 
-Si aún no tienes el proyecto, clónalo utilizando Git:
-
-```bash
-git clone https://github.com/LeoDavintxi/tickets.git
-cd tickets
-```
-
-### 2. Configurar la base de datos con Docker
-
-Este proyecto utiliza una base de datos PostgreSQL. Para configurarla localmente, utilizaremos Docker.
-
-#### 2.1 Crear el contenedor de la base de datos
-
-Crea un archivo `docker-compose.yml` en la raíz del proyecto (si aún no tienes uno) con el siguiente contenido:
+1. Crea un archivo `docker-compose.yml` con el siguiente contenido:
 
 ```yaml
 version: '3.8'
 services:
-  db:
-    image: postgres:latest
-    container_name: ticket_db
+  postgres:
+    image: postgres:15
+    container_name: postgres_ticket_service
     environment:
-      POSTGRES_DB: appTickets
       POSTGRES_USER: appUser
-      POSTGRES_PASSWORD: appTicketsPassword2024
+      POSTGRES_PASSWORD: appTicketPassword2024
+      POSTGRES_DB: appTickets
     ports:
       - "5432:5432"
-    networks:
-      - backend
-networks:
-  backend:
-    driver: bridge
-```
+    volumes:
+      - db_data:/var/lib/postgresql/data
 
-#### 2.2 Levantar el contenedor
+  ticket_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ticket_service_app
+    image: openjdk:17-jdk-slim
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/appTickets
+      SPRING_DATASOURCE_USERNAME: appUser
+      SPRING_DATASOURCE_PASSWORD: appTicketPassword2024
 
-Con el archivo `docker-compose.yml` creado, ejecuta el siguiente comando para iniciar el contenedor de PostgreSQL:
-
-```bash
-docker-compose up -d
-```
-
-Este comando descargará la imagen de PostgreSQL (si no la tienes) y levantará un contenedor con la base de datos accesible en el puerto 5432.
-
-### 3. Configurar las propiedades de la base de datos
-
-Abre el archivo `src/main/resources/application.properties` y configura la conexión a la base de datos PostgreSQL. Agrega lo siguiente:
-
-```properties
-spring.application.name=tickets
-spring.datasource.url=jdbc:postgresql://localhost:5432/appTickets
-spring.datasource.username=appUser
-spring.datasource.password=appTicketsPassword2024
-spring.jpa.hibernate.ddl-auto=update
-spring.datasource.driver-class-name=org.postgresql.Driver
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
-spring.security.user.name=user
-spring.security.user.password=pass
-```
-
-Esto configurará la conexión con la base de datos que corre en Docker.
-
-### 4. Compilar y ejecutar la aplicación
-
-Para compilar y ejecutar la aplicación, abre la terminal en el directorio raíz del proyecto y ejecuta los siguientes comandos:
-
-```bash
-mvn clean install
-mvn spring-boot:run
-```
-
-Esto compilará el proyecto y lo ejecutará. Si todo está bien configurado, la aplicación estará disponible en `http://localhost:8080`.
-
-### 5. Probar los endpoints
-
-Una vez que la aplicación esté corriendo, puedes probar los endpoints utilizando herramientas como Postman o `curl`. Los endpoints disponibles son:
-
-- **GET /api/v1/ticket**: Obtener todos los tickets.
-- **GET /api/v1/ticket/{id}**: Obtener un ticket por su ID.
-- **POST /api/v1/ticket**: Crear un nuevo ticket.
-- **DELETE /api/v1/ticket/{id}**: Eliminar un ticket por su ID.
-- **PATCH /api/v1/ticket/{id}**: Actualizar un ticket por su ID.
-
-#### Ejemplo de uso con `curl`:
-
-1. **Obtener todos los tickets**:
-   ```bash
-   curl -X GET http://localhost:8080/api/v1/ticket
-   ```
-
-2. **Crear un nuevo ticket**:
-   ```bash
-   curl -X POST http://localhost:8080/api/v1/ticket -H "Content-Type: application/json" -d '{"titulo": "Nuevo Ticket", "descripcion": "Descripción del ticket"}'
-   ```
-
-3. **Eliminar un ticket**:
-   ```bash
-   curl -X DELETE http://localhost:8080/api/v1/ticket/{id}
-   ```
-
-4. **Actualizar un ticket**:
-   ```bash
-   curl -X PATCH http://localhost:8080/api/v1/ticket/{id} -H "Content-Type: application/json" -d '{"titulo": "Ticket Actualizado", "descripcion": "Descripción actualizada"}'
-   ```
-
-### 6. Detener el contenedor de Docker
-
-Si deseas detener el contenedor de la base de datos cuando hayas terminado de usarlo, puedes ejecutar el siguiente comando:
-
-```bash
-docker-compose down
-```
-
-Esto detendrá y eliminará el contenedor de la base de datos.
-
-## Detalles adicionales
-
-### Docker para la base de datos
-
-El contenedor de Docker se encargará de crear la base de datos `tickets_db` automáticamente si no existe. Si necesitas eliminar o reiniciar el contenedor, puedes ejecutar los siguientes comandos:
-
-```bash
-docker-compose down
-docker-compose up -d
-```
-
-### Volúmenes de Docker
-
-Si deseas que los datos de la base de datos se mantengan incluso después de detener el contenedor, asegúrate de configurar volúmenes en el archivo `docker-compose.yml` para persistir los datos:
-
-```yaml
 volumes:
   db_data:
 ```
 
-### Errores comunes
+2. Inicia el contenedor con:
 
-1. **Error de conexión a la base de datos**: Asegúrate de que Docker esté corriendo y que el contenedor de la base de datos esté activo.
-2. **Puerto 5432 ya está en uso**: Si tienes otro servicio corriendo en el puerto 5432, puedes cambiar el puerto en el archivo `docker-compose.yml`.
+```bash
+docker-compose up -d
+```
+
+### **Conexión con PgAdmin (opcional)**
+
+1. Accede a PgAdmin y agrega un nuevo servidor:
+   - **Nombre:** `TicketServiceDB`
+   - **Host:** `localhost`
+   - **Puerto:** `5432`
+   - **Usuario:** `appUser`
+   - **Contraseña:** `appTicketPassword2024`
+2. Verifica que la base de datos `appTickets` esté creada.
 
 ---
 
-¡Listo! Ahora puedes ejecutar la aplicación localmente, probar los endpoints y desarrollar nuevas funcionalidades.
+## **Configuración de la Aplicación**
+
+1. Clona este repositorio:
+
+```bash
+git clone <URL_DEL_REPOSITORIO>
+cd <NOMBRE_DEL_REPOSITORIO>
+```
+
+2. Compila el proyecto y genera el archivo `.jar`:
+
+```bash
+mvn clean package
+```
+
+3. Crea un archivo `Dockerfile` en el directorio raíz del proyecto con el siguiente contenido:
+
+```dockerfile
+FROM openjdk:17-jdk-slim
+VOLUME /tmp
+COPY target/ticket-service-0.0.1-SNAPSHOT.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+4. Crea la imagen Docker para la aplicación:
+
+```bash
+docker build -t ticket-service-app .
+```
+
+5. Ejecuta la aplicación en un contenedor:
+
+```bash
+docker run -d -p 8080:8080 --name ticket_service_app ticket-service-app
+```
+
+---
+
+## **Prueba de los Endpoints**
+
+### **Iniciar el servicio**
+
+Asegúrate de que la base de datos y la aplicación están corriendo:
+- Base de datos: `docker-compose up -d`
+- Aplicación: `docker run` o desde tu IDE local.
+
+### **Endpoints Disponibles**
+
+1. **Obtener todos los tickets (con soporte para paginación opcional)**
+
+   - **GET** `/api/v1/ticket`
+   - Parámetros opcionales:
+     - `page`: Número de página.
+     - `size`: Tamaño de la página.
+
+   - **Ejemplo sin paginación:**
+     ```bash
+     curl -X GET http://localhost:8080/api/v1/ticket
+     ```
+   - **Ejemplo con paginación:**
+     ```bash
+     curl -X GET "http://localhost:8080/api/v1/ticket?page=0&size=5"
+     ```
+
+2. **Obtener un ticket por ID**
+
+   - **GET** `/api/v1/ticket/{id}`
+   - **Ejemplo:**
+     ```bash
+     curl -X GET http://localhost:8080/api/v1/ticket/1
+     ```
+
+3. **Crear un nuevo ticket**
+
+   - **POST** `/api/v1/ticket`
+   - **Cuerpo de la solicitud:**
+     ```json
+     {
+       "title": "Nuevo Ticket",
+       "description": "Descripción del ticket",
+       "priority": "HIGH"
+     }
+     ```
+   - **Ejemplo:**
+     ```bash
+     curl -X POST http://localhost:8080/api/v1/ticket \
+     -H "Content-Type: application/json" \
+     -d '{"title": "Nuevo Ticket", "description": "Descripción del ticket", "priority": "HIGH"}'
+     ```
+
+4. **Actualizar un ticket existente**
+
+   - **PATCH** `/api/v1/ticket/{id}`
+   - **Cuerpo de la solicitud:** Similar al de creación.
+   - **Ejemplo:**
+     ```bash
+     curl -X PATCH http://localhost:8080/api/v1/ticket/1 \
+     -H "Content-Type: application/json" \
+     -d '{"title": "Ticket Actualizado", "priority": "LOW"}'
+     ```
+
+5. **Eliminar un ticket**
+
+   - **DELETE** `/api/v1/ticket/{id}`
+   - **Ejemplo:**
+     ```bash
+     curl -X DELETE http://localhost:8080/api/v1/ticket/1
+     ```
+
+---
+
+## **Notas Adicionales**
+
+- Si necesitas detener los contenedores:
+
+```bash
+docker-compose down
+docker stop ticket_service_app
+```
+
+- Asegúrate de que los puertos `5432` (PostgreSQL) y `8080` (Aplicación) estén disponibles en tu máquina.
+
+---
+
+¡Listo! Ahora puedes gestionar tus tickets y explorar el servicio. 😊
