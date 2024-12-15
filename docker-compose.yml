@@ -9,8 +9,20 @@ services:
       POSTGRES_PASSWORD: appTicketsPassword2024
     ports:
       - "5432:5432"
-    networks:
-      - backend
-networks:
-  backend:
-    driver: bridge
+     volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    image: openjdk:17-jdk-slim
+    container_name: app_java
+    working_dir: /app
+    volumes:
+      - ./target:/app
+    command: java -jar /app/mi-aplicacion.jar
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
