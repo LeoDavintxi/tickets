@@ -81,8 +81,8 @@ docker-compose up -d
 1. Clona este repositorio:
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
-cd <NOMBRE_DEL_REPOSITORIO>
+git clone https://github.com/LeoDavintxi/tickets.git
+cd tickets
 ```
 
 2. Compila el proyecto y genera el archivo `.jar`:
